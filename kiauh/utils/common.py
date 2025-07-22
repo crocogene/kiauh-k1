@@ -49,7 +49,7 @@ def get_kiauh_version() -> str:
     lastest_tag: str = get_local_tags(Path(__file__).parent.parent)[-1]
     return lastest_tag
     """
-    label: str = subprocess.check_output(["git", "describe"]).strip()
+    label: str = check_output(["git", "describe"]).strip()
     return label
 
 
