@@ -68,21 +68,6 @@ def install_moonraker_packages() -> None:
     check_install_dependencies({*moonraker_deps})
 
 
-def remove_polkit_rules() -> bool:
-    if not MOONRAKER_DIR.exists():
-        log = "Cannot remove policykit rules. Moonraker directory not found."
-        Logger.print_warn(log)
-        return False
-
-    try:
-        cmd = [f"{MOONRAKER_DIR}/scripts/set-policykit-rules.sh", "--clear"]
-        run(cmd, stderr=PIPE, stdout=DEVNULL, check=True)
-        return True
-    except CalledProcessError as e:
-        Logger.print_error(f"Error while removing policykit rules: {e}")
-        return False
-
-
 def create_example_moonraker_conf(
     instance: Moonraker,
     ports_map: Dict[str, int],

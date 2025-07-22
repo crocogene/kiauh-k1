@@ -30,7 +30,6 @@ class MoonrakerRemoveMenu(BaseMenu):
         self.rm_svc = False
         self.rm_dir = False
         self.rm_env = False
-        self.rm_pk = False
         self.select_state = False
 
         self.mrsvc = MoonrakerSetupService()
@@ -46,7 +45,6 @@ class MoonrakerRemoveMenu(BaseMenu):
             "1": Option(method=self.toggle_remove_moonraker_service),
             "2": Option(method=self.toggle_remove_moonraker_dir),
             "3": Option(method=self.toggle_remove_moonraker_env),
-            "4": Option(method=self.toggle_remove_moonraker_polkit),
             "c": Option(method=self.run_removal_process),
         }
 
@@ -56,7 +54,6 @@ class MoonrakerRemoveMenu(BaseMenu):
         o1 = checked if self.rm_svc else unchecked
         o2 = checked if self.rm_dir else unchecked
         o3 = checked if self.rm_env else unchecked
-        o4 = checked if self.rm_pk else unchecked
         sel_state = f"{'Select' if not self.select_state else 'Deselect'} everything"
         menu = textwrap.dedent(
             f"""
@@ -69,7 +66,6 @@ class MoonrakerRemoveMenu(BaseMenu):
             ║  1) {o1} Remove Service                                ║
             ║  2) {o2} Remove Local Repository                       ║
             ║  3) {o3} Remove Python Environment                     ║
-            ║  4) {o4} Remove Policy Kit Rules                       ║
             ╟───────────────────────────────────────────────────────╢
             ║  C) Continue                                          ║
             ╟───────────────────────────────────────────────────────╢
@@ -82,7 +78,6 @@ class MoonrakerRemoveMenu(BaseMenu):
         self.rm_svc = self.select_state
         self.rm_dir = self.select_state
         self.rm_env = self.select_state
-        self.rm_pk = self.select_state
 
     def toggle_remove_moonraker_service(self, **kwargs) -> None:
         self.rm_svc = not self.rm_svc
@@ -92,9 +87,6 @@ class MoonrakerRemoveMenu(BaseMenu):
 
     def toggle_remove_moonraker_env(self, **kwargs) -> None:
         self.rm_env = not self.rm_env
-
-    def toggle_remove_moonraker_polkit(self, **kwargs) -> None:
-        self.rm_pk = not self.rm_pk
 
     def run_removal_process(self, **kwargs) -> None:
         if not self.rm_svc and not self.rm_dir and not self.rm_env and not self.rm_pk:
@@ -107,4 +99,3 @@ class MoonrakerRemoveMenu(BaseMenu):
         self.rm_svc = False
         self.rm_dir = False
         self.rm_env = False
-        self.rm_pk = False

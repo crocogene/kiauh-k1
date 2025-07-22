@@ -210,10 +210,6 @@ def install_klipper_packages() -> None:
     # Add pkg-config for rp2040 build
     packages.append("pkg-config")
 
-    # Add dbus requirement for DietPi distro
-    # if check_file_exist(Path("/boot/dietpi/.version")):
-    #     packages.append("dbus")
-
     check_install_dependencies({*packages})
 
 

@@ -22,10 +22,6 @@ from components.moonraker import (
     MOONRAKER_REPO_URL,
     MOONRAKER_REQ_FILE,
     MOONRAKER_SPEEDUPS_REQ_FILE,
-    POLKIT_FILE,
-    POLKIT_LEGACY_FILE,
-    POLKIT_SCRIPT,
-    POLKIT_USR_FILE,
 )
 from components.moonraker.moonraker import Moonraker
 from components.moonraker.moonraker_dialogs import print_moonraker_overview
@@ -36,7 +32,6 @@ from components.moonraker.utils.utils import (
     backup_moonraker_dir,
     create_example_moonraker_conf,
     install_moonraker_packages,
-    remove_polkit_rules,
 )
 from components.webui_client.client_utils import (
     enable_mainsail_remotemode,
@@ -191,7 +186,6 @@ class MoonrakerSetupService:
         remove_service: bool,
         remove_dir: bool,
         remove_env: bool,
-        remove_polkit: bool,
     ) -> None:
         self.__refresh_state()
 
@@ -214,7 +208,7 @@ class MoonrakerSetupService:
             else:
                 Logger.print_info("No Moonraker Services installed! Skipped ...")
 
-        if (remove_polkit or remove_dir or remove_env) and unit_file_exists(
+        if (remove_dir or remove_env) and unit_file_exists(
             "moonraker", suffix="service"
         ):
             completion_msg.text = [
@@ -224,10 +218,6 @@ class MoonrakerSetupService:
                 f"● '{MOONRAKER_ENV_DIR}' was not removed, even though selected for removal.",
             ]
         else:
-            if remove_polkit:
-                Logger.print_status("Removing all Moonraker policykit rules ...")
-                if remove_polkit_rules():
-                    completion_msg.text.append("● Moonraker policykit rules removed")
             if remove_dir:
                 Logger.print_status("Removing Moonraker local repository ...")
                 if run_remove_routines(MOONRAKER_DIR):
@@ -321,41 +311,9 @@ class MoonrakerSetupService:
                     install_python_requirements(
                         MOONRAKER_ENV_DIR, MOONRAKER_SPEEDUPS_REQ_FILE
                     )
-            self.__install_polkit()
         except Exception:
             Logger.print_error("Error during installation of Moonraker requirements!")
             raise
-
-    def __install_polkit(self) -> None:
-        Logger.print_status("Installing Moonraker policykit rules ...")
-
-        legacy_file_exists = check_file_exist(POLKIT_LEGACY_FILE, True)
-        polkit_file_exists = check_file_exist(POLKIT_FILE, True)
-        usr_file_exists = check_file_exist(POLKIT_USR_FILE, True)
-
-        if legacy_file_exists or (polkit_file_exists and usr_file_exists):
-            Logger.print_info("Moonraker policykit rules are already installed.")
-            return
-
-        try:
-            command = [POLKIT_SCRIPT, "--disable-systemctl"]
-            result = run(
-                command,
-                stderr=PIPE,
-                stdout=DEVNULL,
-                text=True,
-            )
-            if result.returncode != 0 or result.stderr:
-                Logger.print_error(f"{result.stderr}", False)
-                Logger.print_error("Installing Moonraker policykit rules failed!")
-                return
-
-            Logger.print_ok("Moonraker policykit rules successfully installed!")
-        except CalledProcessError as e:
-            log = (
-                f"Error while installing Moonraker policykit rules: {e.stderr.decode()}"
-            )
-            Logger.print_error(log)
 
     def __get_instances_to_remove(self) -> List[Moonraker] | None:
         start_index = 1

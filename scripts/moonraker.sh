@@ -303,7 +303,7 @@ class SysDepsParser:
 system_deps = {
     "debian": [
         "python3-virtualenv", "python3-dev", "libopenjp2-7", "libsodium-dev",
-        "zlib1g-dev", "libjpeg-dev", "packagekit",
+        "zlib1g-dev", "libjpeg-dev",
         "wireless-tools; distro_id != 'ubuntu' or distro_version <= '24.04'",
         "iw; distro_id == 'ubuntu' and distro_version >= '24.10'", "curl",
         "build-essential"
@@ -365,9 +365,6 @@ function moonraker_setup() {
 
   ### step 4: create moonraker instances
   configure_moonraker_service "${instance_arr[@]}"
-
-  ### step 5: create polkit rules for moonraker
-  install_moonraker_polkit || true
 
   ### step 6: enable and start all instances
   do_action_service "enable" "moonraker"
@@ -544,51 +541,6 @@ function print_mr_ip_list() {
   done && echo
 }
 
-### introduced due to
-### https://github.com/Arksine/moonraker/issues/349
-### https://github.com/Arksine/moonraker/pull/346
-function install_moonraker_polkit() {
-  local POLKIT_LEGACY_FILE="/etc/polkit-1/localauthority/50-local.d/10-moonraker.pkla"
-  local POLKIT_FILE="/etc/polkit-1/rules.d/moonraker.rules"
-  local POLKIT_USR_FILE="/usr/share/polkit-1/rules.d/moonraker.rules"
-  local legacy_file_exists
-  local file_exists
-  local usr_file_exists
-
-  local has_sup
-  local require_daemon_reload="false"
-
-  legacy_file_exists=$(sudo find "${POLKIT_LEGACY_FILE}" 2> /dev/null)
-  file_exists=$(sudo find "${POLKIT_FILE}" 2> /dev/null)
-  usr_file_exists=$(sudo find "${POLKIT_USR_FILE}" 2> /dev/null)
-
-  ### check for required SupplementaryGroups entry in service files
-  ### write it to the service if it doesn't exist
-  for service in $(moonraker_systemd); do
-    has_sup="$(grep "SupplementaryGroups=moonraker-admin" "${service}")"
-    if [[ -z ${has_sup} ]]; then
-      status_msg "Adding moonraker-admin supplementary group to ${service} ..."
-      sudo sed -i "/^Type=simple$/a SupplementaryGroups=moonraker-admin" "${service}"
-      require_daemon_reload="true"
-      ok_msg "Adding moonraker-admin supplementary group successfull!"
-    fi
-  done
-
-  if [[ ${require_daemon_reload} == "true" ]]; then
-    status_msg "Reloading unit files ..."
-    sudo systemctl daemon-reload
-    ok_msg "Unit files reloaded!"
-  fi
-
-  ### execute moonrakers policykit-rules script only if rule files do not already exist
-  if [[ -z ${legacy_file_exists} && ( -z ${file_exists} || -z ${usr_file_exists} ) ]]; then
-    status_msg "Installing Moonraker policykit rules ..."
-    "${HOME}"/moonraker/scripts/set-policykit-rules.sh
-    ok_msg "Moonraker policykit rules installed!"
-  fi
-
-  return
-}
 
 #==================================================#
 #================ REMOVE MOONRAKER ================#
@@ -694,14 +646,6 @@ function remove_moonraker_env() {
   ok_msg "Directory removed!"
 }
 
-function remove_moonraker_polkit() {
-  [[ ! -d ${MOONRAKER_DIR} ]] && return
-
-  status_msg "Removing all Moonraker PolicyKit rules ..."
-  "${MOONRAKER_DIR}"/scripts/set-policykit-rules.sh --clear
-  ok_msg "Done!"
-}
-
 function remove_moonraker() {
   remove_moonraker_sysvinit
   remove_moonraker_systemd
@@ -709,7 +653,6 @@ function remove_moonraker() {
   remove_moonraker_logs
   remove_legacy_moonraker_logs
   remove_moonraker_api_key
-  remove_moonraker_polkit
   remove_moonraker_dir
   remove_moonraker_env
 
@@ -735,9 +678,6 @@ function update_moonraker() {
     ### install possible new python dependencies
     "${MOONRAKER_ENV}"/bin/pip install -r "${MOONRAKER_DIR}/scripts/moonraker-requirements.txt"
   fi
-
-  ### required due to https://github.com/Arksine/moonraker/issues/349
-  install_moonraker_polkit || true
 
   ok_msg "Update complete!"
   do_action_service "restart" "moonraker"
