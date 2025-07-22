@@ -211,8 +211,8 @@ def install_klipper_packages() -> None:
     packages.append("pkg-config")
 
     # Add dbus requirement for DietPi distro
-    if check_file_exist(Path("/boot/dietpi/.version")):
-        packages.append("dbus")
+    #if check_file_exist(Path("/boot/dietpi/.version")):
+    #    packages.append("dbus")
 
     check_install_dependencies({*packages})
 
