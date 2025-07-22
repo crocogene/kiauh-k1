@@ -306,7 +306,7 @@ function install_klipper_packages() {
   ### add pkg-config for rp2040 build
   packages+=" pkg-config"
   ### add dbus requirement for DietPi distro
-  [[ -e "/boot/dietpi/.version" ]] && packages+=" dbus"
+  #[[ -e "/boot/dietpi/.version" ]] && packages+=" dbus"
 
   if (( python_version == 3 )); then
     ### replace python-dev with python3-dev if python3 was selected
