@@ -37,6 +37,7 @@ from utils.sys_utils import (
     install_system_packages,
     update_system_package_lists,
 )
+from subprocess import check_output
 
 
 def get_kiauh_version() -> str:
@@ -44,8 +45,13 @@ def get_kiauh_version() -> str:
     Helper method to get the current KIAUH version by reading the latest tag
     :return: string of the latest tag
     """
-    lastest_tag: str = get_local_tags(Path(__file__).parent)[-1]
+    """
+    lastest_tag: str = get_local_tags(Path(__file__).parent.parent)[-1]
     return lastest_tag
+    """
+    label: str = subprocess.check_output(["git", "describe"]).strip()
+    return label
+
 
 
 def convert_camelcase_to_kebabcase(name: str) -> str:
