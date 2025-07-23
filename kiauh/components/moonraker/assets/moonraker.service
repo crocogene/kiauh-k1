@@ -10,7 +10,6 @@ WantedBy=multi-user.target
 [Service]
 Type=simple
 User=%USER%
-SupplementaryGroups=moonraker-admin
 RemainAfterExit=yes
 WorkingDirectory=%MOONRAKER_DIR%
 EnvironmentFile=%ENV_FILE%
