@@ -89,12 +89,12 @@ class MoonrakerRemoveMenu(BaseMenu):
         self.rm_env = not self.rm_env
 
     def run_removal_process(self, **kwargs) -> None:
-        if not self.rm_svc and not self.rm_dir and not self.rm_env and not self.rm_pk:
+        if not self.rm_svc and not self.rm_dir and not self.rm_env:
             msg = "Nothing selected! Select options to remove first."
             print(Color.apply(msg, Color.RED))
             return
 
-        self.mrsvc.remove(self.rm_svc, self.rm_dir, self.rm_env, self.rm_pk)
+        self.mrsvc.remove(self.rm_svc, self.rm_dir, self.rm_env)
 
         self.rm_svc = False
         self.rm_dir = False
